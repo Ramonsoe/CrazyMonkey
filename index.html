@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Spine Partner</title>
+<title>Spine System</title>
 <style>
   :root{
     --bg:#161412;
@@ -157,18 +157,13 @@
     <p class="sub" id="setupSub">Pick a starting plane and direction. The partner will call out one change at a time.</p>
 
     <div class="section">
-      <p class="seglabel">Starting plane</p>
+      <p class="seglabel">Planes included</p>
       <div class="segrow" id="planeRow"></div>
     </div>
 
     <div class="section" id="dirSection">
-      <p class="seglabel" id="dirLabel">Starting direction</p>
+      <p class="seglabel" id="dirLabel">Directions included</p>
       <div class="segrow" id="dirRow"></div>
-    </div>
-
-    <div class="section hidden" id="levelSection">
-      <p class="seglabel">Starting level</p>
-      <div class="segrow" id="levelRow"></div>
     </div>
 
     <div class="section">
@@ -190,6 +185,7 @@
       </div>
     </div>
 
+    <p class="wakeNote hidden" id="selectionWarning" style="color:#e0796f;">Select at least one option in each group above.</p>
     <button class="startbtn" onclick="startCountdown()">Begin session</button>
     <p class="wakeNote" id="wakeNote"></p>
   </div>
@@ -258,10 +254,9 @@ const INTENSITIES = [
 
 let mode = 'waves'; // waves | circles
 let setup = {
-  plane: 'sagittal',
-  waveDir: 'head',
-  circleDir: 'cw',
-  level: 'head',
+  planesIncluded: { sagittal:true, coronal:true, transverse:true },
+  waveDirsIncluded: { head:true, hips:true },
+  circleDirsIncluded: { cw:true, ccw:true },
   intensity: 'building',
   minutes: 5,
   weights: { plane: 1, dir: 1, level: 1 }
@@ -334,15 +329,15 @@ function selectMode(m){
 }
 
 /* ---------- build setup UI ---------- */
-function buildSegRow(container, items, currentKey, onPick){
+function buildMultiSegRow(container, items, includedMap, onToggle){
   container.innerHTML = '';
   items.forEach(it=>{
     const id = it.id !== undefined ? it.id : it;
     const label = it.label !== undefined ? it.label : (id.charAt(0).toUpperCase()+id.slice(1));
     const div = document.createElement('div');
-    div.className = 'seg' + (id===currentKey ? ' active':'');
+    div.className = 'seg' + (includedMap[id] ? ' active':'');
     div.textContent = label;
-    div.onclick = ()=>{ onPick(id); buildSetupScreen(); };
+    div.onclick = ()=>{ includedMap[id] = !includedMap[id]; onToggle(); buildSetupScreen(); };
     container.appendChild(div);
   });
 }
@@ -352,21 +347,16 @@ function buildSetupScreen(){
   document.getElementById('setupEyebrow').textContent = isWaves ? 'Spinal waves' : 'Spinal circles';
   document.getElementById('setupTitle').textContent = isWaves ? 'Set up waves' : 'Set up circles';
   document.getElementById('setupSub').textContent = isWaves
-    ? 'Pick a starting plane and direction. The partner calls one change at a time.'
-    : 'Pick a starting plane, direction and level. The partner calls one change at a time.';
+    ? 'Choose which planes and directions to include. The partner calls one change at a time, starting from a random state.'
+    : 'Choose which planes and directions to include. The partner calls one change at a time, starting from a random state.';
 
-  buildSegRow(document.getElementById('planeRow'), PLANES, setup.plane, v=>setup.plane=v);
+  buildMultiSegRow(document.getElementById('planeRow'), PLANES, setup.planesIncluded, ()=>{});
 
-  document.getElementById('dirLabel').textContent = 'Starting direction';
+  document.getElementById('dirLabel').textContent = 'Directions included';
   if(isWaves){
-    buildSegRow(document.getElementById('dirRow'), WAVE_DIRS, setup.waveDir, v=>setup.waveDir=v);
+    buildMultiSegRow(document.getElementById('dirRow'), WAVE_DIRS, setup.waveDirsIncluded, ()=>{});
   }else{
-    buildSegRow(document.getElementById('dirRow'), CIRCLE_DIRS, setup.circleDir, v=>setup.circleDir=v);
-  }
-
-  document.getElementById('levelSection').classList.toggle('hidden', isWaves);
-  if(!isWaves){
-    buildSegRow(document.getElementById('levelRow'), LEVELS, setup.level, v=>setup.level=v);
+    buildMultiSegRow(document.getElementById('dirRow'), CIRCLE_DIRS, setup.circleDirsIncluded, ()=>{});
   }
 
   document.getElementById('weightSection').classList.toggle('hidden', isWaves);
@@ -392,6 +382,20 @@ function buildSetupScreen(){
   document.getElementById('wakeNote').textContent = ('wakeLock' in navigator)
     ? 'Keep this tab open and the screen on for reliable cues.'
     : 'Your browser may dim or lock the screen during long sessions — keep it open and active for reliable cues.';
+
+  validateSelections();
+}
+
+function validateSelections(){
+  const isWaves = mode==='waves';
+  const planeCount = Object.values(setup.planesIncluded).filter(Boolean).length;
+  const dirMap = isWaves ? setup.waveDirsIncluded : setup.circleDirsIncluded;
+  const dirCount = Object.values(dirMap).filter(Boolean).length;
+  const ok = planeCount>0 && dirCount>0;
+  document.getElementById('selectionWarning').classList.toggle('hidden', ok);
+  document.querySelector('.startbtn').style.opacity = ok ? '1' : '.4';
+  document.querySelector('.startbtn').style.pointerEvents = ok ? 'auto' : 'none';
+  return ok;
 }
 
 function buildWeightSliders(){
@@ -419,19 +423,21 @@ function resetWeights(){
   buildWeightSliders();
 }
 function weightedPick(dims){
-  if(dims.length===2) return dims[randInt(0,1)];
   const w = setup.weights;
-  const total = w.plane + w.dir + w.level;
+  const total = dims.reduce((sum,d)=>sum + (w[d]||1), 0);
   let r = Math.random()*total;
-  if(r < w.plane) return 'plane';
-  r -= w.plane;
-  if(r < w.dir) return 'dir';
-  return 'level';
+  for(const d of dims){
+    const weight = w[d]||1;
+    if(r < weight) return d;
+    r -= weight;
+  }
+  return dims[dims.length-1];
 }
 
 /* ---------- countdown then session ---------- */
 let countdownTimer = null;
 function startCountdown(){
+  if(!validateSelections()) return;
   show('sessionScreen');
   document.getElementById('countdownOverlay').classList.remove('hidden');
   let n = 3;
@@ -464,12 +470,18 @@ function rangeFor(intensityId){
 }
 function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 
+function pickRandomIncluded(includedMap, allItems){
+  const keys = allItems.map(it => it.id !== undefined ? it.id : it).filter(id => includedMap[id]);
+  return keys[randInt(0, keys.length-1)];
+}
+
 function beginSession(){
   acquireWakeLock();
   const totalSeconds = setup.minutes*60;
+  const startPlane = pickRandomIncluded(setup.planesIncluded, PLANES);
   const state = mode==='waves'
-    ? { plane: setup.plane, dir: setup.waveDir }
-    : { plane: setup.plane, dir: setup.circleDir, level: setup.level };
+    ? { plane: startPlane, dir: pickRandomIncluded(setup.waveDirsIncluded, WAVE_DIRS) }
+    : { plane: startPlane, dir: pickRandomIncluded(setup.circleDirsIncluded, CIRCLE_DIRS), level: LEVELS[randInt(0, LEVELS.length-1)] };
 
   session = {
     running: true,
@@ -486,6 +498,7 @@ function beginSession(){
   renderState(true);
   renderStage();
   updateTimeLeft();
+  speak(startingStateSpeech(state, mode));
 
   tickInterval = setInterval(()=>{
     if(!session || !session.running || session.paused) return;
@@ -518,16 +531,24 @@ function scheduleNextCue(){
 }
 
 function fireCue(){
-  const dims = session.mode==='waves' ? ['plane','dir'] : ['plane','dir','level'];
+  const includedPlanes = PLANES.filter(p=>setup.planesIncluded[p]);
+  const dirMap = session.mode==='waves' ? setup.waveDirsIncluded : setup.circleDirsIncluded;
+  const dirOpts = session.mode==='waves' ? WAVE_DIRS : CIRCLE_DIRS;
+  const includedDirs = dirOpts.filter(o=>dirMap[o.id]);
+
+  let dims = session.mode==='waves' ? ['plane','dir'] : ['plane','dir','level'];
+  if(includedPlanes.length < 2) dims = dims.filter(d=>d!=='plane');
+  if(includedDirs.length < 2) dims = dims.filter(d=>d!=='dir');
+  if(dims.length===0) return; // nothing changeable, skip this cue
+
   const dim = weightedPick(dims);
   let levelMove = null;
 
   if(dim==='plane'){
-    const others = PLANES.filter(p=>p!==session.state.plane);
+    const others = includedPlanes.filter(p=>p!==session.state.plane);
     session.state.plane = others[randInt(0, others.length-1)];
   }else if(dim==='dir'){
-    const opts = session.mode==='waves' ? WAVE_DIRS : CIRCLE_DIRS;
-    const others = opts.filter(o=>o.id!==session.state.dir);
+    const others = includedDirs.filter(o=>o.id!==session.state.dir);
     session.state.dir = others[randInt(0, others.length-1)].id;
   }else if(dim==='level'){
     const idx = LEVELS.indexOf(session.state.level);
@@ -546,6 +567,16 @@ function speechFor(state, changedDim, levelMove){
   if(changedDim==='plane') return state.plane;
   if(changedDim==='dir') return 'change direction';
   if(changedDim==='level') return levelMove;
+}
+
+function startingStateSpeech(state, m){
+  if(m==='waves'){
+    const dirLabel = WAVE_DIRS.find(d=>d.id===state.dir).label;
+    return `${state.plane}, ${dirLabel}`;
+  }else{
+    const dirLabel = CIRCLE_DIRS.find(d=>d.id===state.dir).label;
+    return `${state.plane}, ${dirLabel}, ${state.level}`;
+  }
 }
 
 function renderState(initial){
