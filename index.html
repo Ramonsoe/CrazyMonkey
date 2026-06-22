@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Spine System</title>
+<title>Partner System</title>
 <style>
   :root{
     --bg:#161412;
@@ -119,6 +119,37 @@
   .weightrow input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--line);border-radius:2px;}
   .weightrow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--amber);margin-top:-8px;}
   .resetweights{font-size:13px;color:var(--ink-faint);text-align:right;display:block;margin-top:-4px;margin-bottom:18px;}
+
+  .wheelpicker{
+    position:relative; display:flex; justify-content:center; gap:4px;
+    height:180px; background:var(--bg-raised); border:1px solid var(--line); border-radius:16px;
+    overflow:hidden;
+  }
+  .wheelpicker .highlight{
+    position:absolute; top:50%; left:8px; right:8px; height:44px; transform:translateY(-50%);
+    background:rgba(217,123,63,.10); border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    pointer-events:none; z-index:2; border-radius:8px;
+  }
+  .wheelcol{
+    flex:1; max-width:90px; height:100%; overflow-y:scroll; scroll-snap-type:y mandatory;
+    -webkit-overflow-scrolling:touch; position:relative; z-index:1;
+    scrollbar-width:none;
+  }
+  .wheelcol::-webkit-scrollbar{display:none;}
+  .wheelcol .pad{height:68px; flex:none;}
+  .wheelcol .opt{
+    height:44px; display:flex; align-items:center; justify-content:center;
+    scroll-snap-align:center; font-size:22px; font-variant-numeric:tabular-nums;
+    color:var(--ink-faint); transition:color .15s, font-size .15s;
+  }
+  .wheelcol .opt.center{ color:var(--ink); font-weight:500; }
+  .wheelUnit{
+    position:absolute; z-index:2; top:50%; transform:translateY(-50%);
+    font-size:13px; color:var(--ink-faint); pointer-events:none;
+  }
+  .wheelUnit.min{ right:calc(50% + 4px); }
+  .wheelUnit.sec{ left:calc(50% + 4px); }
+  .wheellabel{ text-align:center; font-size:13px; color:var(--ink-dim); margin-top:8px; }
 </style>
 </head>
 <body>
@@ -127,8 +158,8 @@
   <!-- HOME -->
   <div class="screen" id="homeScreen">
     <p class="eyebrow">Self practice</p>
-    <h1>Spine System</h1>
-    <p class="sub">A voice in your ear, calling cues the way a partner would — let's get coordinating.</p>
+    <h1>Partner System</h1>
+    <p class="sub">A voice in your ear, calling cues the way a partner would — let's get to work.</p>
 
     <div class="modecard" onclick="selectMode('waves')">
       <svg class="glyph" viewBox="0 0 48 48"><path d="M4 24 Q 12 10, 20 24 T 36 24 T 44 24" fill="none" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -144,6 +175,59 @@
       <div class="label">
         <p class="name">Spinal circles</p>
         <p class="desc">Plane, direction &amp; level — head, chest or hips</p>
+      </div>
+      <div class="chev"><i>›</i></div>
+    </div>
+
+    <div class="modecard" onclick="selectMode('figure8')">
+      <svg class="glyph" viewBox="0 0 48 48"><path d="M10 24 C10 16, 17 16, 24 24 C31 32, 38 32, 38 24 C38 16, 31 16, 24 24 C17 32, 10 32, 10 24 Z" fill="none" stroke="#d97b3f" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <div class="label">
+        <p class="name">Figure 8s</p>
+        <p class="desc">Shoulders — sync, initiation &amp; per-side control</p>
+      </div>
+      <div class="chev"><i>›</i></div>
+    </div>
+
+    <div class="modecard" onclick="selectMode('armswings')">
+      <svg class="glyph" viewBox="0 0 48 48"><circle cx="24" cy="14" r="5" fill="none" stroke="#d97b3f" stroke-width="2.5"/><line x1="24" y1="19" x2="24" y2="34" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/><path d="M24 24 C14 24, 12 34, 18 38" fill="none" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/><path d="M24 24 C34 24, 36 34, 30 38" fill="none" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <div class="label">
+        <p class="name">Arm swings</p>
+        <p class="desc">Burst commands — left/right circles, surprise at expert level</p>
+      </div>
+      <div class="chev"><i>›</i></div>
+    </div>
+
+    <div class="modecard" onclick="selectMode('interval')">
+      <svg class="glyph" viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="none" stroke="#d97b3f" stroke-width="2.5"/><line x1="24" y1="24" x2="24" y2="13" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/><line x1="24" y1="24" x2="31" y2="28" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <div class="label">
+        <p class="name">Interval timer</p>
+        <p class="desc">Stopwatch, or a two-stage countdown across rounds</p>
+      </div>
+      <div class="chev"><i>›</i></div>
+    </div>
+  </div>
+
+  <!-- INTERVAL HOME (stopwatch/timer sub-mode picker) -->
+  <div class="screen hidden" id="intervalHomeScreen">
+    <button class="backbtn" onclick="goHome()">‹ Modes</button>
+    <p class="eyebrow">Interval timer</p>
+    <h1>Stopwatch or timer</h1>
+    <p class="sub">Pick a mode.</p>
+
+    <div class="modecard" onclick="selectIntervalSub('stopwatch')">
+      <svg class="glyph" viewBox="0 0 48 48"><circle cx="24" cy="26" r="15" fill="none" stroke="#d97b3f" stroke-width="2.5"/><line x1="24" y1="26" x2="24" y2="17" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/><line x1="24" y1="26" x2="30" y2="26" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/><line x1="20" y1="7" x2="28" y2="7" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/><line x1="24" y1="7" x2="24" y2="11" stroke="#d97b3f" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <div class="label">
+        <p class="name">Stopwatch</p>
+        <p class="desc">Counts up. Start, pause, reset.</p>
+      </div>
+      <div class="chev"><i>›</i></div>
+    </div>
+
+    <div class="modecard" onclick="selectIntervalSub('timer')">
+      <svg class="glyph" viewBox="0 0 48 48"><rect x="9" y="14" width="30" height="24" rx="4" fill="none" stroke="#d97b3f" stroke-width="2.5"/><line x1="9" y1="21" x2="39" y2="21" stroke="#d97b3f" stroke-width="2"/><line x1="24" y1="21" x2="24" y2="38" stroke="#d97b3f" stroke-width="1.5" stroke-dasharray="2,2"/></svg>
+      <div class="label">
+        <p class="name">Timer</p>
+        <p class="desc">Two countdowns per round, repeated</p>
       </div>
       <div class="chev"><i>›</i></div>
     </div>
@@ -227,12 +311,218 @@
       <p class="doneStat" id="doneStat1"></p>
       <p class="doneStat" id="doneStat2"></p>
     </div>
-    <button class="startbtn" onclick="goHome()">Back to modes</button>
+    <button class="startbtn" onclick="backFromDone()">Back to modes</button>
+  </div>
+
+  <!-- STOPWATCH -->
+  <div class="screen hidden" id="stopwatchScreen" style="justify-content:space-between;align-items:center;text-align:center;">
+    <button class="backbtn" style="align-self:flex-start;" onclick="goHome()">‹ Modes</button>
+    <div class="stageWrap">
+      <p class="stateMain" id="swDisplay" style="font-size:48px;font-variant-numeric:tabular-nums;">0:00.0</p>
+    </div>
+    <div class="sessFooter">
+      <button onclick="swReset()">Reset</button>
+      <button onclick="swToggle()" id="swToggleBtn">Start</button>
+    </div>
+  </div>
+
+  <!-- TIMER SETUP -->
+  <div class="screen hidden" id="timerSetupScreen">
+    <button class="backbtn" onclick="goIntervalHome()">‹ Timer modes</button>
+    <p class="eyebrow">Timer</p>
+    <h1>Set up timer</h1>
+    <p class="sub">Two countdowns run back to back, repeated for however many rounds you set. Leave countdown 2 at 0:00 to skip it.</p>
+
+    <div class="section">
+      <p class="seglabel">Countdown 1</p>
+      <div class="wheelpicker" id="wp-cd1">
+        <div class="highlight"></div>
+        <div class="wheelcol" id="wp-cd1-min"></div>
+        <div class="wheelcol" id="wp-cd1-sec"></div>
+      </div>
+      <p class="wheellabel">minutes &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; seconds</p>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Countdown 2</p>
+      <div class="wheelpicker" id="wp-cd2">
+        <div class="highlight"></div>
+        <div class="wheelcol" id="wp-cd2-min"></div>
+        <div class="wheelcol" id="wp-cd2-sec"></div>
+      </div>
+      <p class="wheellabel">minutes &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; seconds</p>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Rounds</p>
+      <div class="durrow">
+        <input type="range" id="tRounds" min="1" max="50" step="1" value="1">
+        <span class="durval" id="tRoundsVal">8</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Beep setting</p>
+      <div class="levelgrid" id="beepGrid"></div>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Alarm length</p>
+      <div class="durrow">
+        <input type="range" id="tAlarmSec" min="1" max="10" step="1" value="1">
+        <span class="durval" id="tAlarmSecVal">1s</span>
+      </div>
+    </div>
+
+    <button class="startbtn" onclick="startTimerSession()">Begin</button>
+    <p class="wakeNote" id="timerWakeNote"></p>
+  </div>
+
+  <!-- TIMER SESSION -->
+  <div class="screen hidden" id="timerSessionScreen" style="justify-content:space-between;align-items:center;text-align:center;">
+    <div class="sessHeader">
+      <span class="modeTag">Timer</span>
+      <span class="timeLeft" id="timerRoundTag">Round 1 / 8</span>
+    </div>
+    <div class="stageWrap" style="flex-direction:column;">
+      <p class="seglabel" id="timerStageLabel" style="margin-bottom:0;">Countdown 1</p>
+      <p class="stateMain" id="timerDisplay" style="font-size:64px;font-variant-numeric:tabular-nums;">1:00</p>
+    </div>
+    <div class="sessFooter">
+      <button onclick="timerTogglePause()" id="timerPauseBtn">Pause</button>
+      <button class="danger" onclick="endTimerSession()">End</button>
+    </div>
+  </div>
+
+  <!-- FIGURE 8 SETUP -->
+  <div class="screen hidden" id="fig8SetupScreen">
+    <button class="backbtn" onclick="goHome()">‹ Modes</button>
+    <p class="eyebrow">Figure 8s</p>
+    <h1>Set up figure 8s</h1>
+    <p class="sub" id="fig8Sub">Shoulders moving in a figure 8. The partner calls one change at a time, starting from a random state.</p>
+
+    <div class="section">
+      <p class="seglabel">Complexity</p>
+      <div class="segrow">
+        <div class="seg" id="fig8BasicBtn" onclick="setFig8Complexity('basic')">Basic</div>
+        <div class="seg" id="fig8AdvBtn" onclick="setFig8Complexity('advanced')">Advanced</div>
+      </div>
+    </div>
+
+    <div class="section" id="fig8WeightSection">
+      <p class="seglabel">Command mix</p>
+      <div id="fig8WeightGrid"></div>
+      <span class="resetweights" onclick="resetFig8Weights()">Reset to equal</span>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Partner intensity</p>
+      <div class="levelgrid" id="fig8IntensityGrid"></div>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Session length</p>
+      <div class="durrow">
+        <input type="range" id="fig8DurSlider" min="1" max="20" step="1" value="5">
+        <span class="durval" id="fig8DurVal">5 min</span>
+      </div>
+    </div>
+
+    <button class="startbtn" onclick="startFig8Countdown()">Begin session</button>
+    <p class="wakeNote" id="fig8WakeNote"></p>
+  </div>
+
+  <!-- FIGURE 8 SESSION -->
+  <div class="screen hidden" id="fig8SessionScreen" style="position:relative;justify-content:space-between;align-items:center;text-align:center;">
+    <div class="countdownOverlay hidden" id="fig8CountdownOverlay">
+      <div class="countdownNum" id="fig8CountdownNum">3</div>
+      <div class="countdownLbl">get ready</div>
+    </div>
+    <div class="sessHeader">
+      <span class="modeTag">Figure 8s</span>
+      <span class="timeLeft" id="fig8TimeLeft">5:00</span>
+    </div>
+    <div class="stageWrap">
+      <svg id="fig8Svg" viewBox="0 0 240 240" style="width:220px;height:220px;"></svg>
+    </div>
+    <div>
+      <div class="stateBlock">
+        <p class="stateMain" id="fig8StateMain">—</p>
+        <p class="stateSub" id="fig8StateSub">—</p>
+      </div>
+    </div>
+    <div class="sessFooter">
+      <button onclick="fig8TogglePause()" id="fig8PauseBtn">Pause</button>
+      <button class="danger" onclick="endFig8Session()">End</button>
+    </div>
+  </div>
+
+  <!-- ARM SWINGS SETUP -->
+  <div class="screen hidden" id="armSetupScreen">
+    <button class="backbtn" onclick="goHome()">‹ Modes</button>
+    <p class="eyebrow">Arm swings</p>
+    <h1>Set up arm swings</h1>
+    <p class="sub">Standing bilateral swings, asynchronous, throwing each arm from the floor and spine. The partner calls a burst of left/right commands — execute the whole sequence from memory.</p>
+
+    <div class="section">
+      <p class="seglabel">Level</p>
+      <div class="levelgrid" id="armLevelGrid"></div>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Partner intensity</p>
+      <div class="levelgrid" id="armIntensityGrid"></div>
+    </div>
+
+    <div class="section">
+      <p class="seglabel">Session length</p>
+      <div class="durrow">
+        <input type="range" id="armDurSlider" min="1" max="20" step="1" value="5">
+        <span class="durval" id="armDurVal">5 min</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="seglabel" style="color:var(--ink-faint);">Advanced timing (optional)</p>
+      <div class="durrow">
+        <input type="range" id="armSecPerCircle" min="5" max="30" step="1" value="15">
+        <span class="durval" id="armSecPerCircleVal">1.5s / circle</span>
+      </div>
+    </div>
+
+    <button class="startbtn" onclick="startArmCountdown()">Begin session</button>
+    <p class="wakeNote" id="armWakeNote"></p>
+  </div>
+
+  <!-- ARM SWINGS SESSION -->
+  <div class="screen hidden" id="armSessionScreen" style="position:relative;justify-content:space-between;align-items:center;text-align:center;">
+    <div class="countdownOverlay hidden" id="armCountdownOverlay">
+      <div class="countdownNum" id="armCountdownNum">3</div>
+      <div class="countdownLbl">get ready</div>
+    </div>
+    <div class="sessHeader">
+      <span class="modeTag" id="armLevelTag">Arm swings</span>
+      <span class="timeLeft" id="armTimeLeft">5:00</span>
+    </div>
+    <div class="stageWrap">
+      <svg id="armSvg" viewBox="0 0 240 240" style="width:220px;height:220px;"></svg>
+    </div>
+    <div>
+      <div class="stateBlock">
+        <p class="stateMain" id="armStateMain" style="font-size:24px;letter-spacing:.04em;">—</p>
+        <p class="stateSub" id="armStateSub">—</p>
+      </div>
+    </div>
+    <div class="sessFooter">
+      <button onclick="armTogglePause()" id="armPauseBtn">Pause</button>
+      <button class="danger" onclick="endArmSession()">End</button>
+    </div>
   </div>
 
 </div>
 
 <script>
+
 /* ---------- data model ---------- */
 const PLANES = ['sagittal','coronal','transverse'];
 const WAVE_DIRS = [
@@ -312,20 +602,805 @@ document.addEventListener('visibilitychange', async ()=>{
 
 /* ---------- screen nav ---------- */
 function show(id){
-  ['homeScreen','setupScreen','sessionScreen','doneScreen'].forEach(s=>{
+  ['homeScreen','intervalHomeScreen','setupScreen','sessionScreen','doneScreen','stopwatchScreen','timerSetupScreen','timerSessionScreen','fig8SetupScreen','fig8SessionScreen','armSetupScreen','armSessionScreen'].forEach(s=>{
     document.getElementById(s).classList.toggle('hidden', s!==id);
   });
 }
 function goHome(){
   releaseWakeLock();
   if(session){ session.running=false; clearTimers(); }
+  swStop(false);
+  timerStop(false);
+  fig8Stop();
+  armStop();
   show('homeScreen');
+}
+function goIntervalHome(){
+  releaseWakeLock();
+  swStop(false);
+  timerStop(false);
+  show('intervalHomeScreen');
 }
 
 function selectMode(m){
+  if(m==='interval'){
+    show('intervalHomeScreen');
+    return;
+  }
+  if(m==='figure8'){
+    buildFig8SetupScreen();
+    show('fig8SetupScreen');
+    return;
+  }
+  if(m==='armswings'){
+    buildArmSetupScreen();
+    show('armSetupScreen');
+    return;
+  }
   mode = m;
   buildSetupScreen();
   show('setupScreen');
+}
+
+function selectIntervalSub(sub){
+  if(sub==='stopwatch'){
+    swReset();
+    show('stopwatchScreen');
+  }else{
+    buildTimerSetupScreen();
+    show('timerSetupScreen');
+  }
+}
+
+/* ---------- stopwatch ---------- */
+let swElapsedMs = 0;
+let swRunning = false;
+let swStartTs = 0;
+let swRaf = null;
+
+function swFormat(ms){
+  const totalDeci = Math.floor(ms/100);
+  const m = Math.floor(totalDeci/600);
+  const s = Math.floor((totalDeci%600)/10);
+  const d = totalDeci%10;
+  return `${m}:${String(s).padStart(2,'0')}.${d}`;
+}
+function swTick(){
+  if(!swRunning) return;
+  const now = performance.now();
+  document.getElementById('swDisplay').textContent = swFormat(swElapsedMs + (now - swStartTs));
+  swRaf = requestAnimationFrame(swTick);
+}
+function swToggle(){
+  if(swRunning){
+    swElapsedMs += performance.now() - swStartTs;
+    swRunning = false;
+    if(swRaf) cancelAnimationFrame(swRaf);
+    document.getElementById('swToggleBtn').textContent = 'Resume';
+    releaseWakeLock();
+  }else{
+    swStartTs = performance.now();
+    swRunning = true;
+    document.getElementById('swToggleBtn').textContent = 'Pause';
+    acquireWakeLock();
+    swTick();
+  }
+}
+function swReset(){
+  swRunning = false;
+  if(swRaf) cancelAnimationFrame(swRaf);
+  swElapsedMs = 0;
+  document.getElementById('swDisplay').textContent = swFormat(0);
+  document.getElementById('swToggleBtn').textContent = 'Start';
+}
+function swStop(keepDisplay){
+  swRunning = false;
+  if(swRaf) cancelAnimationFrame(swRaf);
+  if(!keepDisplay) swElapsedMs = 0;
+}
+
+/* ---------- timer (two-stage countdown x rounds) ---------- */
+const BEEP_SETTINGS = [
+  {id:'loud', name:'Loud'},
+  {id:'less-loud', name:'Less loud'},
+  {id:'vibrate', name:'Vibrate'},
+  {id:'vibrate-beep', name:'Vibrate + beep'}
+];
+let timerSetup = { cd1: 60, cd2: 0, rounds: 1, beep: 'loud', alarmSec: 1 };
+let timerState = null; // {round, stage(1|2), remaining, running, paused}
+let timerInterval = null;
+let audioCtx = null;
+
+function buildTimerSetupScreen(){
+  initWheelPicker('wp-cd1-min', 0, 20, Math.floor(timerSetup.cd1/60), v=>{
+    timerSetup.cd1 = v*60 + (timerSetup.cd1%60);
+  });
+  initWheelPicker('wp-cd1-sec', 0, 59, timerSetup.cd1%60, v=>{
+    timerSetup.cd1 = Math.floor(timerSetup.cd1/60)*60 + v;
+  });
+  initWheelPicker('wp-cd2-min', 0, 20, Math.floor(timerSetup.cd2/60), v=>{
+    timerSetup.cd2 = v*60 + (timerSetup.cd2%60);
+  });
+  initWheelPicker('wp-cd2-sec', 0, 59, timerSetup.cd2%60, v=>{
+    timerSetup.cd2 = Math.floor(timerSetup.cd2/60)*60 + v;
+  });
+
+  const rd = document.getElementById('tRounds');
+  rd.value = timerSetup.rounds;
+  document.getElementById('tRoundsVal').textContent = timerSetup.rounds;
+  rd.oninput = ()=>{ timerSetup.rounds = +rd.value; document.getElementById('tRoundsVal').textContent = rd.value; };
+
+  const grid = document.getElementById('beepGrid');
+  grid.innerHTML = '';
+  BEEP_SETTINGS.forEach(b=>{
+    const row = document.createElement('div');
+    row.className = 'levelrow' + (b.id===timerSetup.beep ? ' active':'');
+    row.innerHTML = `<span class="lname">${b.name}</span>`;
+    row.onclick = ()=>{ timerSetup.beep = b.id; buildTimerSetupScreen(); };
+    grid.appendChild(row);
+  });
+
+  const alarm = document.getElementById('tAlarmSec');
+  alarm.value = timerSetup.alarmSec;
+  document.getElementById('tAlarmSecVal').textContent = timerSetup.alarmSec + 's';
+  alarm.oninput = ()=>{ timerSetup.alarmSec = +alarm.value; document.getElementById('tAlarmSecVal').textContent = alarm.value + 's'; };
+
+  document.getElementById('timerWakeNote').textContent = ('wakeLock' in navigator)
+    ? 'Keep this tab open and the screen on for reliable cues.'
+    : 'Your browser may dim or lock the screen during long sessions — keep it open and active for reliable cues.';
+}
+
+function initWheelPicker(elId, min, max, currentValue, onChange){
+  const el = document.getElementById(elId);
+  const itemH = 44;
+  const padH = 68;
+  // only rebuild DOM once per element to avoid losing scroll position on every setup rebuild
+  if(!el.dataset.built){
+    let html = `<div class="pad" style="height:${padH}px"></div>`;
+    for(let i=min;i<=max;i++){
+      html += `<div class="opt" data-val="${i}">${String(i).padStart(2,'0')}</div>`;
+    }
+    html += `<div class="pad" style="height:${padH}px"></div>`;
+    el.innerHTML = html;
+    el.dataset.built = '1';
+
+    let scrollTimeout = null;
+    el.addEventListener('scroll', ()=>{
+      if(scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(()=>{
+        const idx = Math.round(el.scrollTop / itemH);
+        const clamped = Math.max(0, Math.min(max-min, idx));
+        const val = min + clamped;
+        highlightWheelOpt(el, val);
+        onChange(val);
+      }, 80);
+    }, { passive:true });
+  }
+  // set scroll position to reflect currentValue (e.g. when switching modes / reopening setup)
+  const clampedVal = Math.max(min, Math.min(max, currentValue||0));
+  el.scrollTop = (clampedVal-min) * itemH;
+  highlightWheelOpt(el, clampedVal);
+}
+
+function highlightWheelOpt(el, val){
+  el.querySelectorAll('.opt').forEach(opt=>{
+    opt.classList.toggle('center', parseInt(opt.dataset.val,10)===val);
+  });
+}
+
+function fmtMS(totalSec){
+  const m = Math.floor(totalSec/60), s = totalSec%60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function ensureAudioCtx(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){}
+  }
+  return audioCtx;
+}
+function playBeep(loud){
+  const ctx = ensureAudioCtx();
+  if(!ctx) return;
+  const durMs = (timerSetup.alarmSec||1) * 1000;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 880;
+  const peak = loud ? 0.4 : 0.12;
+  gain.gain.value = peak;
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start();
+  const fadeStart = Math.max(0, durMs - 80);
+  setTimeout(()=>{
+    try{ gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08); }catch(e){}
+  }, fadeStart);
+  setTimeout(()=>{ osc.stop(); }, durMs);
+}
+function doVibrate(){
+  if('vibrate' in navigator) navigator.vibrate((timerSetup.alarmSec||1) * 1000);
+}
+function fireBeepSetting(){
+  switch(timerSetup.beep){
+    case 'loud': playBeep(true); break;
+    case 'less-loud': playBeep(false); break;
+    case 'vibrate': doVibrate(); break;
+    case 'vibrate-beep': doVibrate(); playBeep(true); break;
+  }
+}
+
+function startTimerSession(){
+  show('timerSessionScreen');
+  acquireWakeLock();
+  timerState = {
+    round: 1,
+    totalRounds: timerSetup.rounds,
+    stage: 1,
+    remaining: timerSetup.cd1,
+    running: true,
+    paused: false
+  };
+  if(timerSetup.cd1<=0 && timerSetup.cd2>0){
+    timerState.stage = 2;
+    timerState.remaining = timerSetup.cd2;
+  }
+  document.getElementById('timerPauseBtn').textContent = 'Pause';
+  renderTimerState();
+  fireBeepSetting();
+  timerInterval = setInterval(timerTick, 1000);
+}
+
+function renderTimerState(){
+  document.getElementById('timerRoundTag').textContent = `Round ${timerState.round} / ${timerState.totalRounds}`;
+  document.getElementById('timerStageLabel').textContent = `Countdown ${timerState.stage}`;
+  document.getElementById('timerDisplay').textContent = fmtMS(timerState.remaining);
+}
+
+function timerTick(){
+  if(!timerState || !timerState.running || timerState.paused) return;
+  timerState.remaining--;
+  if(timerState.remaining < 0){
+    advanceTimerStage();
+    return;
+  }
+  renderTimerState();
+}
+
+function advanceTimerStage(){
+  fireBeepSetting();
+  if(timerState.stage === 1){
+    if(timerSetup.cd2 > 0){
+      timerState.stage = 2;
+      timerState.remaining = timerSetup.cd2;
+      renderTimerState();
+      return;
+    }
+    // cd2 skipped, fall through to next round
+  }
+  // finished stage 2, or stage1 with no stage2: move to next round
+  if(timerState.round >= timerState.totalRounds){
+    timerStop(true);
+    return;
+  }
+  timerState.round++;
+  timerState.stage = 1;
+  timerState.remaining = timerSetup.cd1;
+  if(timerSetup.cd1<=0 && timerSetup.cd2>0){
+    timerState.stage = 2;
+    timerState.remaining = timerSetup.cd2;
+  }
+  renderTimerState();
+}
+
+function timerTogglePause(){
+  if(!timerState) return;
+  timerState.paused = !timerState.paused;
+  document.getElementById('timerPauseBtn').textContent = timerState.paused ? 'Resume' : 'Pause';
+}
+
+function endTimerSession(){
+  timerStop(false);
+  goIntervalHome();
+}
+
+function timerStop(showZero){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+  if(timerState){ timerState.running = false; }
+  releaseWakeLock();
+  if(showZero && timerState){
+    document.getElementById('timerDisplay').textContent = '0:00';
+  }
+}
+
+/* ---------- figure 8s ---------- */
+let fig8Setup = {
+  complexity: 'basic',
+  intensity: 'building',
+  minutes: 5,
+  weights: { sync:1, initBoth:1, initSide:1 }
+};
+let fig8Session = null;
+let fig8CueTimeout = null;
+let fig8TickInterval = null;
+let fig8CountdownTimer = null;
+
+function setFig8Complexity(c){
+  fig8Setup.complexity = c;
+  buildFig8SetupScreen();
+}
+
+function buildFig8SetupScreen(){
+  document.getElementById('fig8BasicBtn').classList.toggle('active', fig8Setup.complexity==='basic');
+  document.getElementById('fig8AdvBtn').classList.toggle('active', fig8Setup.complexity==='advanced');
+  document.getElementById('fig8Sub').textContent = fig8Setup.complexity==='basic'
+    ? 'Both shoulders move together. The partner calls changes to sync or initiation.'
+    : 'Each shoulder can be cued independently. The partner may call sync, or initiation for both, left, or right.';
+
+  document.getElementById('fig8WeightSection').classList.toggle('hidden', fig8Setup.complexity==='basic');
+  if(fig8Setup.complexity==='advanced'){
+    buildFig8WeightSliders();
+  }
+
+  const grid = document.getElementById('fig8IntensityGrid');
+  grid.innerHTML = '';
+  INTENSITIES.forEach(it=>{
+    const row = document.createElement('div');
+    row.className = 'levelrow' + (it.id===fig8Setup.intensity ? ' active':'');
+    row.innerHTML = `<span class="lname">${it.name}</span><span class="lrange">${it.range[0]}–${it.range[1]}s</span>`;
+    row.onclick = ()=>{ fig8Setup.intensity = it.id; buildFig8SetupScreen(); };
+    grid.appendChild(row);
+  });
+
+  const dur = document.getElementById('fig8DurSlider');
+  dur.value = fig8Setup.minutes;
+  document.getElementById('fig8DurVal').textContent = fig8Setup.minutes + ' min';
+  dur.oninput = ()=>{ fig8Setup.minutes = parseInt(dur.value,10); document.getElementById('fig8DurVal').textContent = fig8Setup.minutes + ' min'; };
+
+  document.getElementById('fig8WakeNote').textContent = ('wakeLock' in navigator)
+    ? 'Keep this tab open and the screen on for reliable cues.'
+    : 'Your browser may dim or lock the screen during long sessions — keep it open and active for reliable cues.';
+}
+
+function buildFig8WeightSliders(){
+  const grid = document.getElementById('fig8WeightGrid');
+  grid.innerHTML = '';
+  const names = { sync:'Sync / async', initBoth:'Initiation (both)', initSide:'Initiation (left/right)' };
+  Object.keys(fig8Setup.weights).forEach(key=>{
+    const total = Object.values(fig8Setup.weights).reduce((a,b)=>a+b,0);
+    const pct = Math.round((fig8Setup.weights[key]/total)*100);
+    const row = document.createElement('div');
+    row.className = 'weightrow';
+    row.innerHTML = `
+      <div class="wtop"><span class="wname">${names[key]}</span><span class="wpct">${pct}%</span></div>
+      <input type="range" min="1" max="10" step="1" value="${fig8Setup.weights[key]}" data-key="${key}">
+    `;
+    row.querySelector('input').oninput = (e)=>{
+      fig8Setup.weights[key] = parseInt(e.target.value,10);
+      buildFig8WeightSliders();
+    };
+    grid.appendChild(row);
+  });
+}
+function resetFig8Weights(){
+  fig8Setup.weights = { sync:1, initBoth:1, initSide:1 };
+  buildFig8WeightSliders();
+}
+
+function fig8WeightedPick(dims){
+  const w = fig8Setup.weights;
+  const total = dims.reduce((sum,d)=>sum + (w[d]||1), 0);
+  let r = Math.random()*total;
+  for(const d of dims){
+    const weight = w[d]||1;
+    if(r < weight) return d;
+    r -= weight;
+  }
+  return dims[dims.length-1];
+}
+
+function startFig8Countdown(){
+  show('fig8SessionScreen');
+  document.getElementById('fig8CountdownOverlay').classList.remove('hidden');
+  let n = 3;
+  document.getElementById('fig8CountdownNum').textContent = n;
+  speak('Get ready');
+  fig8CountdownTimer = setInterval(()=>{
+    n--;
+    if(n>0){
+      document.getElementById('fig8CountdownNum').textContent = n;
+    }else{
+      clearInterval(fig8CountdownTimer);
+      document.getElementById('fig8CountdownOverlay').classList.add('hidden');
+      beginFig8Session();
+    }
+  },1000);
+}
+
+function beginFig8Session(){
+  acquireWakeLock();
+  const totalSeconds = fig8Setup.minutes*60;
+  const sync = Math.random()<0.5 ? 'sync' : 'async';
+  const leftInit = Math.random()<0.5 ? 'medial' : 'lateral';
+  const rightInit = fig8Setup.complexity==='basic' ? leftInit : (Math.random()<0.5 ? 'medial' : 'lateral');
+
+  fig8Session = {
+    running: true,
+    paused: false,
+    complexity: fig8Setup.complexity,
+    state: { sync, leftInit, rightInit },
+    totalSeconds,
+    elapsed: 0,
+    cueCount: 0
+  };
+
+  document.getElementById('fig8PauseBtn').textContent = 'Pause';
+  renderFig8State(true);
+  renderFig8Stage();
+  updateFig8TimeLeft();
+  speak(fig8StartSpeech(fig8Session.state, fig8Session.complexity));
+
+  fig8TickInterval = setInterval(()=>{
+    if(!fig8Session || !fig8Session.running || fig8Session.paused) return;
+    fig8Session.elapsed++;
+    updateFig8TimeLeft();
+    if(fig8Session.elapsed >= fig8Session.totalSeconds){
+      fig8Finish();
+    }
+  },1000);
+
+  scheduleFig8Cue();
+}
+
+function updateFig8TimeLeft(){
+  const left = Math.max(0, fig8Session.totalSeconds - fig8Session.elapsed);
+  const m = Math.floor(left/60), s = left%60;
+  document.getElementById('fig8TimeLeft').textContent = m+':'+String(s).padStart(2,'0');
+}
+
+function scheduleFig8Cue(){
+  const range = INTENSITIES.find(i=>i.id===fig8Setup.intensity).range;
+  const delay = randInt(range[0], range[1])*1000;
+  fig8CueTimeout = setTimeout(()=>{
+    if(!fig8Session || !fig8Session.running) return;
+    if(fig8Session.paused){ scheduleFig8Cue(); return; }
+    if(fig8Session.elapsed >= fig8Session.totalSeconds) return;
+    fireFig8Cue();
+    scheduleFig8Cue();
+  }, delay);
+}
+
+function fireFig8Cue(){
+  const dims = fig8Session.complexity==='basic' ? ['sync','initBoth'] : ['sync','initBoth','initSide'];
+  const dim = fig8WeightedPick(dims);
+  const s = fig8Session.state;
+  let speech = '';
+
+  if(dim==='sync'){
+    s.sync = s.sync==='sync' ? 'async' : 'sync';
+    speech = s.sync==='sync' ? 'synchronous' : 'asynchronous';
+  }else if(dim==='initBoth'){
+    const flipped = s.leftInit==='medial' ? 'lateral' : 'medial';
+    s.leftInit = flipped; s.rightInit = flipped;
+    speech = flipped;
+  }else if(dim==='initSide'){
+    const side = Math.random()<0.5 ? 'left' : 'right';
+    if(side==='left'){
+      s.leftInit = s.leftInit==='medial' ? 'lateral' : 'medial';
+      speech = 'left, ' + s.leftInit;
+    }else{
+      s.rightInit = s.rightInit==='medial' ? 'lateral' : 'medial';
+      speech = 'right, ' + s.rightInit;
+    }
+  }
+  fig8Session.cueCount++;
+  renderFig8State(false);
+  renderFig8Stage();
+  speak(speech);
+}
+
+function fig8StartSpeech(state, complexity){
+  const syncLabel = state.sync==='sync' ? 'synchronous' : 'asynchronous';
+  if(complexity==='basic'){
+    return `${syncLabel}, ${state.leftInit}`;
+  }
+  return `${syncLabel}, left ${state.leftInit}, right ${state.rightInit}`;
+}
+
+function renderFig8State(initial){
+  const s = fig8Session.state;
+  const syncLabel = s.sync==='sync' ? 'Synchronous' : 'Asynchronous';
+  document.getElementById('fig8StateMain').textContent = syncLabel;
+  if(fig8Session.complexity==='basic'){
+    document.getElementById('fig8StateSub').textContent = capitalize(s.leftInit);
+  }else{
+    document.getElementById('fig8StateSub').textContent = `Left: ${capitalize(s.leftInit)} · Right: ${capitalize(s.rightInit)}`;
+  }
+}
+
+function renderFig8Stage(){
+  const svg = document.getElementById('fig8Svg');
+  const s = fig8Session.state;
+  const amber = '#d97b3f';
+  const amber2 = '#c9602a';
+  const leftArrow = s.leftInit==='medial' ? 'M70 120 L100 120' : 'M100 120 L70 120';
+  const rightArrow = s.rightInit==='medial' ? 'M170 120 L140 120' : 'M140 120 L170 120';
+  let html = `
+    <path d="M60 120 C60 80, 110 80, 120 120 C130 160, 180 160, 180 120 C180 80, 130 80, 120 120 C110 160, 60 160, 60 120 Z" fill="none" stroke="${amber}" stroke-width="3"/>
+    <circle cx="60" cy="120" r="6" fill="${amber}"/>
+    <circle cx="180" cy="120" r="6" fill="${amber2}"/>
+  `;
+  svg.innerHTML = html;
+}
+
+function fig8TogglePause(){
+  if(!fig8Session) return;
+  fig8Session.paused = !fig8Session.paused;
+  document.getElementById('fig8PauseBtn').textContent = fig8Session.paused ? 'Resume' : 'Pause';
+  if(fig8Session.paused){ speechSynthesis.cancel(); }
+}
+
+function endFig8Session(){
+  if(!fig8Session) return;
+  fig8Session.running = false;
+  fig8ClearTimers();
+  releaseWakeLock();
+  speechSynthesis.cancel();
+  showDone(fig8Session.elapsed, fig8Session.cueCount, undefined, 'fig8SetupScreen');
+}
+
+function fig8Finish(){
+  if(!fig8Session) return;
+  fig8Session.running = false;
+  fig8ClearTimers();
+  releaseWakeLock();
+  speak('Session complete');
+  showDone(fig8Session.elapsed, fig8Session.cueCount, undefined, 'fig8SetupScreen');
+}
+
+function fig8Stop(){
+  if(fig8Session) fig8Session.running = false;
+  fig8ClearTimers();
+  releaseWakeLock();
+  speechSynthesis.cancel();
+}
+
+function fig8ClearTimers(){
+  if(fig8CueTimeout) clearTimeout(fig8CueTimeout);
+  if(fig8TickInterval) clearInterval(fig8TickInterval);
+  if(fig8CountdownTimer) clearInterval(fig8CountdownTimer);
+  fig8CueTimeout = null; fig8TickInterval = null; fig8CountdownTimer = null;
+}
+
+/* ---------- arm swings ---------- */
+const ARM_LEVELS = [
+  {id:'beginner', name:'Beginner', range:[1,2], math:false},
+  {id:'intermediate', name:'Intermediate', range:[2,4], math:false},
+  {id:'advanced', name:'Advanced', range:[3,5], math:false},
+  {id:'expert', name:'Expert', range:[3,5], math:true}
+];
+let armSetup = {
+  level: 'beginner',
+  intensity: 'building',
+  minutes: 5,
+  secPerCircle: 1.5
+};
+let armSession = null;
+let armCueTimeout = null;
+let armTickInterval = null;
+let armCountdownTimer = null;
+let armMathTimeout = null;
+
+function buildArmSetupScreen(){
+  const lg = document.getElementById('armLevelGrid');
+  lg.innerHTML = '';
+  ARM_LEVELS.forEach(lv=>{
+    const row = document.createElement('div');
+    row.className = 'levelrow' + (lv.id===armSetup.level ? ' active':'');
+    const tag = lv.math ? ' · surprise' : '';
+    row.innerHTML = `<span class="lname">${lv.name}</span><span class="lrange">${lv.range[0]}–${lv.range[1]} cmds${tag}</span>`;
+    row.onclick = ()=>{ armSetup.level = lv.id; buildArmSetupScreen(); };
+    lg.appendChild(row);
+  });
+
+  const ig = document.getElementById('armIntensityGrid');
+  ig.innerHTML = '';
+  INTENSITIES.forEach(it=>{
+    const row = document.createElement('div');
+    row.className = 'levelrow' + (it.id===armSetup.intensity ? ' active':'');
+    row.innerHTML = `<span class="lname">${it.name}</span><span class="lrange">${it.range[0]}–${it.range[1]}s</span>`;
+    row.onclick = ()=>{ armSetup.intensity = it.id; buildArmSetupScreen(); };
+    ig.appendChild(row);
+  });
+
+  const dur = document.getElementById('armDurSlider');
+  dur.value = armSetup.minutes;
+  document.getElementById('armDurVal').textContent = armSetup.minutes + ' min';
+  dur.oninput = ()=>{ armSetup.minutes = parseInt(dur.value,10); document.getElementById('armDurVal').textContent = armSetup.minutes + ' min'; };
+
+  const spc = document.getElementById('armSecPerCircle');
+  spc.value = Math.round(armSetup.secPerCircle*10);
+  document.getElementById('armSecPerCircleVal').textContent = armSetup.secPerCircle.toFixed(1) + 's / circle';
+  spc.oninput = ()=>{ armSetup.secPerCircle = parseInt(spc.value,10)/10; document.getElementById('armSecPerCircleVal').textContent = armSetup.secPerCircle.toFixed(1) + 's / circle'; };
+
+  document.getElementById('armWakeNote').textContent = ('wakeLock' in navigator)
+    ? 'Keep this tab open and the screen on for reliable cues.'
+    : 'Your browser may dim or lock the screen during long sessions — keep it open and active for reliable cues.';
+}
+
+function startArmCountdown(){
+  show('armSessionScreen');
+  document.getElementById('armCountdownOverlay').classList.remove('hidden');
+  document.getElementById('armLevelTag').textContent = ARM_LEVELS.find(l=>l.id===armSetup.level).name;
+  let n = 3;
+  document.getElementById('armCountdownNum').textContent = n;
+  speak('Get ready');
+  armCountdownTimer = setInterval(()=>{
+    n--;
+    if(n>0){
+      document.getElementById('armCountdownNum').textContent = n;
+    }else{
+      clearInterval(armCountdownTimer);
+      document.getElementById('armCountdownOverlay').classList.add('hidden');
+      beginArmSession();
+    }
+  },1000);
+}
+
+function beginArmSession(){
+  acquireWakeLock();
+  const levelDef = ARM_LEVELS.find(l=>l.id===armSetup.level);
+  armSession = {
+    running: true,
+    paused: false,
+    levelDef,
+    totalSeconds: armSetup.minutes*60,
+    elapsed: 0,
+    burstCount: 0
+  };
+  document.getElementById('armPauseBtn').textContent = 'Pause';
+  document.getElementById('armStateMain').textContent = '—';
+  document.getElementById('armStateSub').textContent = 'Listen for the next burst';
+  renderArmStage(null);
+  updateArmTimeLeft();
+
+  armTickInterval = setInterval(()=>{
+    if(!armSession || !armSession.running || armSession.paused) return;
+    armSession.elapsed++;
+    updateArmTimeLeft();
+    if(armSession.elapsed >= armSession.totalSeconds){
+      armFinish();
+    }
+  },1000);
+
+  scheduleArmBurst();
+}
+
+function updateArmTimeLeft(){
+  const left = Math.max(0, armSession.totalSeconds - armSession.elapsed);
+  const m = Math.floor(left/60), s = left%60;
+  document.getElementById('armTimeLeft').textContent = m+':'+String(s).padStart(2,'0');
+}
+
+function scheduleArmBurst(){
+  const range = INTENSITIES.find(i=>i.id===armSetup.intensity).range;
+  const delay = randInt(range[0], range[1])*1000;
+  armCueTimeout = setTimeout(()=>{
+    if(!armSession || !armSession.running) return;
+    if(armSession.paused){ scheduleArmBurst(); return; }
+    if(armSession.elapsed >= armSession.totalSeconds) return;
+    fireArmBurst();
+  }, delay);
+}
+
+function fireArmBurst(){
+  const [lo,hi] = armSession.levelDef.range;
+  const len = randInt(lo,hi);
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push(Math.random()<0.5 ? 'left':'right');
+
+  armSession.burstCount++;
+  document.getElementById('armStateMain').textContent = seq.map(s=>s.toUpperCase()).join(' · ');
+  document.getElementById('armStateSub').textContent = `Burst ${armSession.burstCount} — ${seq.length} command${seq.length>1?'s':''}`;
+  renderArmStage(seq);
+  speak(seq.join(', '));
+
+  if(armSession.levelDef.math){
+    // Estimate how long the spoken burst announcement takes (rough TTS pace),
+    // so the question never overlaps the commands themselves.
+    const wordsSpoken = seq.length; // "left," or "right," each ~1 word
+    const speechMs = 350 + wordsSpoken * 450; // small base + per-word pace
+    const execMsLocal = seq.length * armSetup.secPerCircle * 1000;
+    // Question fires sometime after speech finishes, within the remaining execution window.
+    const earliest = speechMs;
+    const latest = Math.max(speechMs + 300, execMsLocal * 0.9);
+    const mathDelay = randInt(Math.round(earliest), Math.round(latest));
+    armMathTimeout = setTimeout(()=>{
+      if(!armSession || !armSession.running || armSession.paused) return;
+      speak(generateMathQuestion());
+    }, mathDelay);
+  }
+
+  // schedule next burst after this one's estimated execution time, then the usual gap
+  const execMs = seq.length * armSetup.secPerCircle * 1000;
+  setTimeout(()=>{
+    if(!armSession || !armSession.running) return;
+    scheduleArmBurst();
+  }, execMs);
+}
+
+function generateMathQuestion(){
+  const ops = ['+','-','×'];
+  const op = ops[randInt(0,2)];
+  let a,b,answerText;
+  if(op==='+'){
+    a = randInt(2,20); b = randInt(2,20);
+    answerText = `${a} plus ${b}`;
+  }else if(op==='-'){
+    a = randInt(5,20); b = randInt(1,a);
+    answerText = `${a} minus ${b}`;
+  }else{
+    a = randInt(2,9); b = randInt(2,9);
+    answerText = `${a} times ${b}`;
+  }
+  return answerText;
+}
+
+function renderArmStage(seq){
+  const svg = document.getElementById('armSvg');
+  const amber = '#d97b3f';
+  const dim = '#403a32';
+  let html = `<circle cx="120" cy="60" r="14" fill="none" stroke="${dim}" stroke-width="2.5"/>
+    <line x1="120" y1="74" x2="120" y2="150" stroke="${dim}" stroke-width="2.5" stroke-linecap="round"/>`;
+  if(!seq || seq.length===0){
+    html += `<path d="M120 100 C90 100, 80 140, 95 160" fill="none" stroke="${dim}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M120 100 C150 100, 160 140, 145 160" fill="none" stroke="${dim}" stroke-width="3" stroke-linecap="round"/>`;
+  }else{
+    const first = seq[0];
+    const leftActive = first==='left';
+    html += `<path d="M120 100 C90 100, 80 140, 95 160" fill="none" stroke="${leftActive?amber:dim}" stroke-width="${leftActive?4:3}" stroke-linecap="round"/>
+      <path d="M120 100 C150 100, 160 140, 145 160" fill="none" stroke="${!leftActive?amber:dim}" stroke-width="${!leftActive?4:3}" stroke-linecap="round"/>`;
+  }
+  svg.innerHTML = html;
+}
+
+function armTogglePause(){
+  if(!armSession) return;
+  armSession.paused = !armSession.paused;
+  document.getElementById('armPauseBtn').textContent = armSession.paused ? 'Resume' : 'Pause';
+  if(armSession.paused){ speechSynthesis.cancel(); }
+}
+
+function endArmSession(){
+  if(!armSession) return;
+  armSession.running = false;
+  armClearTimers();
+  releaseWakeLock();
+  speechSynthesis.cancel();
+  showDone(armSession.elapsed, armSession.burstCount, 'bursts called', 'armSetupScreen');
+}
+
+function armFinish(){
+  if(!armSession) return;
+  armSession.running = false;
+  armClearTimers();
+  releaseWakeLock();
+  speak('Session complete');
+  showDone(armSession.elapsed, armSession.burstCount, 'bursts called', 'armSetupScreen');
+}
+
+function armStop(){
+  if(armSession) armSession.running = false;
+  armClearTimers();
+  releaseWakeLock();
+  speechSynthesis.cancel();
+}
+
+function armClearTimers(){
+  if(armCueTimeout) clearTimeout(armCueTimeout);
+  if(armTickInterval) clearInterval(armTickInterval);
+  if(armCountdownTimer) clearInterval(armCountdownTimer);
+  if(armMathTimeout) clearTimeout(armMathTimeout);
+  armCueTimeout = null; armTickInterval = null; armCountdownTimer = null; armMathTimeout = null;
 }
 
 /* ---------- build setup UI ---------- */
@@ -641,7 +1716,7 @@ function endSession(){
   clearTimers();
   releaseWakeLock();
   speechSynthesis.cancel();
-  showDone();
+  showDone(session.elapsed, session.cueCount, undefined, 'setupScreen');
 }
 
 function finishSession(){
@@ -649,15 +1724,33 @@ function finishSession(){
   clearTimers();
   releaseWakeLock();
   speak('Session complete');
-  showDone();
+  showDone(session.elapsed, session.cueCount, undefined, 'setupScreen');
 }
 
-function showDone(){
-  const mins = Math.floor(session.elapsed/60);
-  const secs = session.elapsed%60;
+let doneReturnTo = 'homeScreen';
+
+function showDone(elapsedSeconds, cueCount, label, returnTo){
+  const mins = Math.floor(elapsedSeconds/60);
+  const secs = elapsedSeconds%60;
   document.getElementById('doneStat1').textContent = `${mins}:${String(secs).padStart(2,'0')} trained`;
-  document.getElementById('doneStat2').textContent = `${session.cueCount} cues called`;
+  document.getElementById('doneStat2').textContent = `${cueCount} ${label || 'cues called'}`;
+  doneReturnTo = returnTo || 'homeScreen';
   show('doneScreen');
+}
+
+function backFromDone(){
+  if(doneReturnTo === 'setupScreen'){
+    buildSetupScreen();
+    show('setupScreen');
+  }else if(doneReturnTo === 'fig8SetupScreen'){
+    buildFig8SetupScreen();
+    show('fig8SetupScreen');
+  }else if(doneReturnTo === 'armSetupScreen'){
+    buildArmSetupScreen();
+    show('armSetupScreen');
+  }else{
+    show('homeScreen');
+  }
 }
 
 /* ---------- init ---------- */
